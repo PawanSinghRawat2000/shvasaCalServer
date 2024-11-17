@@ -33,9 +33,9 @@ app.get("/health", (req, res) => {
     res.send("Ok");
 });
 
-app.post("/createEvent", authMiddleware,async (req, res) => {
+app.post("/createEvent", authMiddleware, async (req, res) => {
     const postData = req.body;
-    postData.createdBy = 1;
+    postData.createdBy = req.user._id;
 
     try {
         const event = new Event(postData);
@@ -95,11 +95,11 @@ app.post("/createEvent", authMiddleware,async (req, res) => {
 });
 
 app.post("/getWeeklyEvents", authMiddleware, async (req, res) => {
-    const userId = 1;
-    const { startDate, endDate } = req.body;
+    const { startDate, endDate,userId } = req.body;
+    const user = userId ?userId:req.user._id;
     try {
         const events = await Event.find({
-            createdBy: userId,
+            createdBy: user,
             $or: [
                 { startTime: { $gte: startDate, $lte: endDate } },
                 { endTime: { $gte: startDate, $lte: endDate } }
@@ -119,7 +119,7 @@ app.post("/getWeeklyEvents", authMiddleware, async (req, res) => {
 });
 
 app.post("/oauth2callback", async (req, res) => {
-    const {code} = req.body;
+    const { code } = req.body;
     if (!code) {
         return res.status(400).send("Authorization code is missing.");
     }
@@ -127,7 +127,7 @@ app.post("/oauth2callback", async (req, res) => {
         // Exchange authorization code for access and refresh tokens
         const { tokens } = await oauth2Client.getToken(code);
         oauth2Client.setCredentials(tokens);
-        return res.status(200).json({message:"Sign In successful"});
+        return res.status(200).json({ message: "Sign In successful" });
     } catch (error) {
         console.error("Error exchanging code for tokens:", error);
         res.status(500).send("Error during authentication.");
@@ -136,7 +136,6 @@ app.post("/oauth2callback", async (req, res) => {
 
 app.post("/events", authMiddleware, async (req, res) => {
     const { startDate, endDate } = req.body;
-    console.log(startDate,endDate);
     try {
         if (!oauth2Client.credentials || !oauth2Client.credentials.access_token) {
             return res.status(401).json({ message: "Please sign in" });
@@ -152,6 +151,18 @@ app.post("/events", authMiddleware, async (req, res) => {
 
         const events = response.data.items;
         res.status(200).json(events);
+    } catch (error) {
+        console.error("Error fetching events:", error);
+        res.status(500).send("Error fetching events.");
+    }
+});
+
+app.post("/users", authMiddleware, async (req, res) => {
+    const { userSearch } = req.body;
+    try {
+        const users = await User.find({ email: { $regex: userSearch, $options: "i" } },{password:0});
+        const data = users.filter((user)=> !user._id.equals(req.user._id));
+        return res.status(200).json({ message: "success", data });
     } catch (error) {
         console.error("Error fetching events:", error);
         res.status(500).send("Error fetching events.");
@@ -189,7 +200,6 @@ app.post("/emailLogin", async (req, res) => {
                 expiresIn: 10 * 24 * 60 * 60,
             }
         );
-        console.log(token);
         res.cookie("shvasaCal_token", token, {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             httpOnly: false,
@@ -215,7 +225,6 @@ app.post("/emailSignup", async (req, res) => {
 
         //check user exists
         let user = await User.findOne({ email });
-        console.log(user);
         if (user) {
             return res
                 .status(401)
@@ -223,12 +232,11 @@ app.post("/emailSignup", async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log(hashedPassword)
         const newUser = new User({ email, password: hashedPassword });
         newUser.save();
         const token = jwt.sign(
             {
-                id: user._id,
+                id: newUser._id,
             },
             process.env.JWT_SECRET_KEY,
             {
@@ -247,6 +255,7 @@ app.post("/emailSignup", async (req, res) => {
             message: "User created successfully",
         });
     } catch (err) {
+        console.error(err)
         return res.status(500).json({
             message:
                 "Internal Server Error",

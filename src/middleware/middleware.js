@@ -2,9 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 
 module.exports.authMiddleware = async (req, res, next) => {
-    console.log(req.cookies);
     const token = req.cookies.shvasaCal_token;
-    console.log(token);
     if (!token) {
         return res.status(401).json({ message: "User not logged in" });
     }
