@@ -36,8 +36,8 @@ exports.emailLogin = async (req, res) => {
         res.cookie("shvasaCal_token", token, {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             httpOnly: false,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
         });
         return res.status(200).json({ user: user, message: "Logged in" });
     } catch (err) {
@@ -80,8 +80,8 @@ exports.emailSignup = async (req, res) => {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             withCredentials: true,
             httpOnly: false,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
         });
         return res.status(201).json({
             user: newUser,
@@ -100,8 +100,8 @@ exports.logout = async (req, res) => {
     try {
         res.clearCookie("shvasaCal_token", {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
         });
 
         return res.status(200).json({
