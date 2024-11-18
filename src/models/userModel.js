@@ -9,6 +9,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    tokens: {
+        type: Object,
+    },
     createdAt: {
         type: Date,
         default: Date.now,

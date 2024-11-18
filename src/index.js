@@ -95,8 +95,8 @@ app.post("/createEvent", authMiddleware, async (req, res) => {
 });
 
 app.post("/getWeeklyEvents", authMiddleware, async (req, res) => {
-    const { startDate, endDate,userId } = req.body;
-    const user = userId ?userId:req.user._id;
+    const { startDate, endDate, userId } = req.body;
+    const user = userId ? userId : req.user._id;
     try {
         const events = await Event.find({
             createdBy: user,
@@ -118,8 +118,8 @@ app.post("/getWeeklyEvents", authMiddleware, async (req, res) => {
     }
 });
 
-app.post("/oauth2callback", async (req, res) => {
-    const { code } = req.body;
+app.get("/oauth2callback", async (req, res) => {
+    const { code, state } = req.query;
     if (!code) {
         return res.status(400).send("Authorization code is missing.");
     }
@@ -127,7 +127,18 @@ app.post("/oauth2callback", async (req, res) => {
         // Exchange authorization code for access and refresh tokens
         const { tokens } = await oauth2Client.getToken(code);
         oauth2Client.setCredentials(tokens);
-        return res.status(200).json({ message: "Sign In successful" });
+        const { userId } = JSON.parse(state);
+        await User.updateOne(
+            { _id: userId },
+            { $set: { tokens } },
+        );
+        res.cookie("google_sync_token", "1", {
+            maxAge: 1000 * 60 * 60 * 24 * 10,
+            httpOnly: false,
+            secure: false,
+            sameSite: "lax",
+        });
+        res.redirect(`${process.env.CLIENT_URL}/calendar`);
     } catch (error) {
         console.error("Error exchanging code for tokens:", error);
         res.status(500).send("Error during authentication.");
@@ -160,8 +171,8 @@ app.post("/events", authMiddleware, async (req, res) => {
 app.post("/users", authMiddleware, async (req, res) => {
     const { userSearch } = req.body;
     try {
-        const users = await User.find({ email: { $regex: userSearch, $options: "i" } },{password:0});
-        const data = users.filter((user)=> !user._id.equals(req.user._id));
+        const users = await User.find({ email: { $regex: userSearch, $options: "i" } }, { password: 0 });
+        const data = users.filter((user) => !user._id.equals(req.user._id));
         return res.status(200).json({ message: "success", data });
     } catch (error) {
         console.error("Error fetching events:", error);
@@ -281,6 +292,82 @@ app.get("/logout", authMiddleware, async (req, res) => {
         });
     }
 })
+
+app.get("/googleAuth", authMiddleware, async (req, res) => {
+    const user = await User.findOne({ _id: req.user._id });
+    if (user.tokens && user.tokens.access_token && user.tokens.expiry_date > new Date()) {
+        oauth2Client.setCredentials(user.tokens);
+    } else if (user.tokens && user.tokens.access_token) {
+        await refreshAccessToken(user._id, user.tokens.refresh_token);
+    } else {
+        const authUrl = oauth2Client.generateAuthUrl({
+            access_type: "offline",
+            scope: [
+                "https://www.googleapis.com/auth/calendar.readonly",
+                "https://www.googleapis.com/auth/calendar.events",
+            ],
+            prompt: "consent",
+            state: JSON.stringify({ userId: user._id }),
+        });
+
+        return res.redirect(authUrl);
+    }
+    res.cookie("google_sync_token", "1", {
+        maxAge: 1000 * 60 * 60 * 24 * 10,
+        httpOnly: false,
+        secure: false,
+        sameSite: "lax",
+    });
+    res.redirect(`${process.env.CLIENT_URL}/calendar`);
+
+})
+
+async function refreshAccessToken(userId, refreshToken) {
+    try {
+        oauth2Client.setCredentials({ refresh_token: refreshToken });
+        const { credentials } = await oauth2Client.refreshAccessToken();
+        await User.updateOne(
+            { _id: userId },
+            { $set: { "tokens.access_token": credentials.access_token, "tokens.expiry_date": credentials.expiry_date } }
+        );
+
+        return credentials.access_token;
+    } catch (error) {
+        console.error("Error refreshing access token:", error.message);
+        throw new Error("Could not refresh access token");
+    }
+}
+
+app.post("/getUpcomingEvents", authMiddleware, async (req, res) => {
+    const { page = 1, filter = null } = req.body;
+    console.log(page,filter);
+    try {
+        const pageSize = 10;
+        const skip = (page - 1) * pageSize;
+        const query = {
+            createdBy: req.user._id,
+            startTime: { $gt: new Date() },
+        };
+        if (filter) {
+            query.tag = filter;
+        }
+        const events = await Event.find(query).skip(skip).limit(pageSize);
+
+        const totalEvents = await Event.countDocuments(query);
+
+        const totalPages = Math.ceil(totalEvents / pageSize);
+
+        res.status(200).json({
+            events,
+            totalPages,
+            totalEvents,
+        });
+    } catch (error) {
+        console.error("Error fetching events:", error);
+        res.status(500).send("Error fetching events.");
+    }
+});
+
 
 const PORT = process.env.PORT || 3012;
 app.listen(PORT, () => {
