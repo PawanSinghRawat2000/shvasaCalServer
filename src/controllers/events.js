@@ -105,9 +105,10 @@ exports.auth2callback = async (req, res, next) => {
         );
         res.cookie("google_sync_token", "1", {
             maxAge: 1000 * 60 * 60 * 24 * 10,
+            withCredentials: true,
             httpOnly: false,
             secure: true,
-            sameSite: "None",
+            sameSite: "none",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
     } catch (error) {
@@ -193,9 +194,10 @@ exports.googleAuth = async (req, res, next) => {
         }
         res.cookie("google_sync_token", "1", {
             maxAge: 1000 * 60 * 60 * 24 * 10,
+            withCredentials: true,
             httpOnly: false,
             secure: true,
-            sameSite: "None",
+            sameSite: "none",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
     } catch (error) {
