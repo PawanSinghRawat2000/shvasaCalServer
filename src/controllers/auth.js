@@ -37,7 +37,7 @@ exports.emailLogin = async (req, res) => {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             httpOnly: false,
             secure: true,
-            sameSite: "none",
+            sameSite: "None",
         });
         return res.status(200).json({ user: user, message: "Logged in" });
     } catch (err) {
@@ -81,7 +81,7 @@ exports.emailSignup = async (req, res) => {
             withCredentials: true,
             httpOnly: false,
             secure: true,
-            sameSite: "none",
+            sameSite: "None",
         });
         return res.status(201).json({
             user: newUser,
@@ -101,7 +101,7 @@ exports.logout = async (req, res) => {
         res.clearCookie("shvasaCal_token", {
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "None",
         });
 
         return res.status(200).json({
