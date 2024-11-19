@@ -37,8 +37,8 @@ exports.emailLogin = async (req, res) => {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             withCredentials: true,
             httpOnly: false,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
         });
         return res.status(200).json({ user: user, message: "Logged in" });
     } catch (err) {
@@ -81,8 +81,8 @@ exports.emailSignup = async (req, res) => {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             withCredentials: true,
             httpOnly: false,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
         });
         return res.status(201).json({
             user: newUser,
@@ -103,8 +103,8 @@ exports.logout = async (req, res) => {
             maxAge: 0,
             withCredentials: true,
             httpOnly: false,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
         });
 
         return res.status(200).json({
