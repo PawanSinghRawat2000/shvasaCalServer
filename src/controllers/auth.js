@@ -38,7 +38,7 @@ exports.emailLogin = async (req, res) => {
             withCredentials: true,
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: "none",
+            sameSite: "lax",
         });
         return res.status(200).json({ user: user, message: "Logged in" });
     } catch (err) {
@@ -82,7 +82,7 @@ exports.emailSignup = async (req, res) => {
             withCredentials: true,
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: "none",
+            sameSite: "lax",
         });
         return res.status(201).json({
             user: newUser,
@@ -104,7 +104,7 @@ exports.logout = async (req, res) => {
             withCredentials: true,
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: "none",
+            sameSite: "lax",
         });
 
         return res.status(200).json({

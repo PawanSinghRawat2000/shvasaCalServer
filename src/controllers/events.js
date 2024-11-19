@@ -108,7 +108,7 @@ exports.auth2callback = async (req, res, next) => {
             withCredentials: true,
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: "none",
+            sameSite: "lax",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
     } catch (error) {
@@ -124,7 +124,7 @@ exports.getGoogleEvents = async (req, res, next) => {
             const user = await User.findOne({ _id: req.user._id });
             if (user.tokens?.access_token && user.tokens.expiry_date > new Date()) {
                 oauth2Client.setCredentials(user.tokens);
-            }else return res.status(401).json({ message: "Please sign in with google to sync" });
+            } else return res.status(401).json({ message: "Please sign in with google to sync" });
         }
         const calendar = google.calendar({ version: "v3", auth: oauth2Client });
         const response = await calendar.events.list({
@@ -197,7 +197,7 @@ exports.googleAuth = async (req, res, next) => {
             withCredentials: true,
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: "none",
+            sameSite: "lax",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
     } catch (error) {
