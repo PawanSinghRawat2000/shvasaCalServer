@@ -108,7 +108,7 @@ exports.auth2callback = async (req, res, next) => {
             withCredentials: true,
             httpOnly: false,
             secure: false,
-            sameSite: "none",
+            sameSite: "lax",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
     } catch (error) {
@@ -197,7 +197,7 @@ exports.googleAuth = async (req, res, next) => {
             withCredentials: true,
             httpOnly: false,
             secure: false,
-            sameSite: "none",
+            sameSite: "lax",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
     } catch (error) {
