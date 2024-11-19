@@ -190,7 +190,7 @@ exports.googleAuth = async (req, res, next) => {
                 state: JSON.stringify({ userId: user._id }),
             });
 
-            return res.redirect(authUrl);
+            return res.status(200).json({redirectUrl:authUrl});
         }
         res.cookie("google_sync_token", "1", {
             maxAge: 1000 * 60 * 60 * 24 * 10,
@@ -199,7 +199,7 @@ exports.googleAuth = async (req, res, next) => {
             secure: true,
             sameSite: "none",
         });
-        res.redirect(`${process.env.CLIENT_URL}/calendar`);
+        return res.status(200).json({message:"success"});
     } catch (error) {
         console.error("Error during Google authentication:", error.message);
         next(error);
