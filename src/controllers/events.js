@@ -103,14 +103,7 @@ exports.auth2callback = async (req, res, next) => {
             { _id: userId },
             { $set: { tokens } },
         );
-        res.cookie("google_sync_token", "1", {
-            maxAge: 1000 * 60 * 60 * 24 * 10,
-            withCredentials: true,
-            httpOnly: false,
-            secure: true,
-            sameSite: "none",
-        });
-        res.redirect(`${process.env.CLIENT_URL}/calendar`);
+        res.redirect(`${process.env.CLIENT_URL}/calendar?sync=1`);
     } catch (error) {
         console.error("Error exchanging code for tokens:", error);
         next(error);
@@ -192,13 +185,6 @@ exports.googleAuth = async (req, res, next) => {
 
             return res.status(200).json({redirectUrl:authUrl});
         }
-        res.cookie("google_sync_token", "1", {
-            maxAge: 1000 * 60 * 60 * 24 * 10,
-            withCredentials: true,
-            httpOnly: false,
-            secure: true,
-            sameSite: "none",
-        });
         return res.status(200).json({message:"success"});
     } catch (error) {
         console.error("Error during Google authentication:", error.message);
