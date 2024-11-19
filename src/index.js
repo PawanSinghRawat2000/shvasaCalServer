@@ -38,7 +38,7 @@ app.post("/emailSignup", emailSignup)
 
 app.get("/logout", authMiddleware, logout)
 
-app.get("/googleAuth", googleAuth)
+app.get("/googleAuth", authMiddleware,googleAuth)
 
 app.post("/getUpcomingEvents", authMiddleware, getUpcomingEvents);
 
