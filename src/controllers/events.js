@@ -107,7 +107,7 @@ exports.auth2callback = async (req, res, next) => {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             withCredentials: true,
             httpOnly: false,
-            secure: true,
+            secure: false,
             sameSite: "none",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
@@ -196,7 +196,7 @@ exports.googleAuth = async (req, res, next) => {
             maxAge: 1000 * 60 * 60 * 24 * 10,
             withCredentials: true,
             httpOnly: false,
-            secure: true,
+            secure: false,
             sameSite: "none",
         });
         res.redirect(`${process.env.CLIENT_URL}/calendar`);
