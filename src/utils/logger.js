@@ -5,16 +5,15 @@ const fs = require("fs");
 
 
 const fileRotateTransport = new winston.transports.DailyRotateFile({
-    filename: 'error_log/error.log',
+    filename: 'tmp/error.log',
     datePattern: 'YYYY-MM-DD',
     maxFiles: '7d',
 });
-if (!fs.existsSync("error_log")) {
-    fs.mkdirSync("error_log");
+if (!fs.existsSync("tmp")) {
+    fs.mkdirSync("tmp");
 }
 
 const getErrorLocation = (stack) => {
-    console.log("object")
     if (!stack) return '';
     const lines = stack.split('\n');
     const match = lines[1]?.match(/\(([^)]+)\)/) || lines[1]?.match(/at (.+)/);
