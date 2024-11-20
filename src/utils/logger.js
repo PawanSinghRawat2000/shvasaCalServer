@@ -9,9 +9,6 @@ const fileRotateTransport = new winston.transports.DailyRotateFile({
     datePattern: 'YYYY-MM-DD',
     maxFiles: '7d',
 });
-// if (!fs.existsSync("tmp")) {
-//     fs.mkdirSync("tmp");
-// }
 
 const getErrorLocation = (stack) => {
     if (!stack) return '';
