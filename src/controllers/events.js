@@ -1,6 +1,7 @@
 const { google } = require("googleapis");
 const Event = require("../models/eventModel");
 const User = require("../models/userModel");
+const logger = require("../utils/logger")
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -51,10 +52,10 @@ exports.createEvent = async (req, res, next) => {
                     resource: googleEvent,
                 });
             } catch (error) {
-                console.error("Error syncing to Google Calendar:", error.message);
+                logger.error(`Error syncing to Google Calendar: ${error}`, { stack: error.stack });
                 return res.status(500).json({
                     message: "Error syncing to Google Calendar.",
-                    error: error.message,
+                    error: error,
                 });
             }
         }
@@ -64,7 +65,7 @@ exports.createEvent = async (req, res, next) => {
             event: savedEvent,
         });
     } catch (error) {
-        console.error("Error saving event:", error.message);
+        logger.error(`Error saving event: ${error}`, { stack: error.stack });
         next(error);
     }
 }
@@ -85,7 +86,7 @@ exports.getWeeklyEvents = async (req, res, next) => {
             event: events,
         });
     } catch (error) {
-        console.error("Error fetching event:", error.message);
+        logger.error(`Error fetching event: ${error}`, { stack: error.stack });
         next(error)
     }
 }
@@ -105,7 +106,7 @@ exports.auth2callback = async (req, res, next) => {
         );
         res.redirect(`${process.env.CLIENT_URL}/calendar?sync=1`);
     } catch (error) {
-        console.error("Error exchanging code for tokens:", error);
+        logger.error(`Error exchanging code for tokens: ${error}`, { stack: error.stack });
         next(error);
     }
 }
@@ -131,7 +132,7 @@ exports.getGoogleEvents = async (req, res, next) => {
         const events = response.data.items;
         res.status(200).json(events);
     } catch (error) {
-        console.error("Error fetching events:", error);
+        logger.error(`Error fetching events: ${error}`, { stack: error.stack });
         next(error);
     }
 }
@@ -160,7 +161,7 @@ exports.getUpcomingEvents = async (req, res, next) => {
             totalEvents,
         });
     } catch (error) {
-        console.error("Error fetching events:", error);
+        logger.error(`Error fetching upcoming events: ${error}`, { stack: error.stack });
         next(error);
     }
 }
@@ -183,11 +184,11 @@ exports.googleAuth = async (req, res, next) => {
                 state: JSON.stringify({ userId: user._id }),
             });
 
-            return res.status(200).json({redirectUrl:authUrl});
+            return res.status(200).json({ redirectUrl: authUrl });
         }
-        return res.status(200).json({message:"success"});
+        return res.status(200).json({ message: "success" });
     } catch (error) {
-        console.error("Error during Google authentication:", error.message);
+        logger.error(`Error during Google authentication: ${error}`, { stack: error.stack });
         next(error);
     }
 }
@@ -203,7 +204,6 @@ const refreshAccessToken = async (userId, refreshToken) => {
 
         return credentials.access_token;
     } catch (error) {
-        console.error("Error refreshing access token:", error.message);
         throw new Error("Could not refresh access token");
     }
 }

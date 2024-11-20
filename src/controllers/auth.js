@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const User = require("../models/userModel");
+const logger = require("../utils/logger")
 
-exports.emailLogin = async (req, res) => {
+exports.emailLogin = async (req, res, next) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) {
+        if (!emails || !password) {
             return res.status(400).json({
                 message: "Email and password are required.",
             });
@@ -42,9 +43,8 @@ exports.emailLogin = async (req, res) => {
         });
         return res.status(200).json({ user: user, message: "Logged in" });
     } catch (err) {
-        return res
-            .status(500)
-            .json({ status: 500, message: "Internal Server Error" });
+        logger.error(`Error Signing in: ${err}`, { stack: err.stack });
+        next(err);
     }
 }
 
@@ -89,11 +89,8 @@ exports.emailSignup = async (req, res) => {
             message: "User created successfully",
         });
     } catch (err) {
-        console.error(err)
-        return res.status(500).json({
-            message:
-                "Internal Server Error",
-        });
+        logger.error(`Error Signing up: ${err}`, { stack: err.stack });
+        next(err)
     }
 }
 
@@ -111,9 +108,7 @@ exports.logout = async (req, res) => {
             message: "Logged out successfully",
         });
     } catch (err) {
-        console.error("Error during logout:", err.message);
-        return res.status(500).json({
-            message: "Internal Server Error",
-        });
+        logger.error(`Error during logout: ${err}`, { stack: err.stack });
+        next(err);
     }
 }
