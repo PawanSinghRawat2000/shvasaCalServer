@@ -5,7 +5,7 @@ const fs = require("fs");
 
 
 const fileRotateTransport = new winston.transports.DailyRotateFile({
-    filename: 'tmp/error.log',
+    filename: '/tmp/error.log',
     datePattern: 'YYYY-MM-DD',
     maxFiles: '7d',
 });
